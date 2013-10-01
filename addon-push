@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Replace this value to push to different release channels.
+ANDROID_APP_ID=org.mozilla.fennec_$USER
+
+# TODO: Make sure this does not suck with spaces in filenames.
+ADDON_PATH=$1
+ADDON_NAME=`basename "$1"`
+
+# Ensure file is handled as an addon by appended .xpi.
+# TODO: Assumes only one '.'
+EXTENSION=$(echo ${ADDON_NAME}| awk -F\. '{print $2}')
+if [ "${EXTENSION}" != "xpi" ]; then
+  echo WARNING: Appending '.xpi' extension to given file. Is this definitely \
+       an extension?
+  ADDON_NAME=${ADDON_NAME}.xpi
+fi
+
+adb push "$ADDON_PATH" /sdcard/"$ADDON_NAME" && \
+# via https://github.com/ncalexan/healthreport-upload-test-addon/blob/master/build.sh
+adb shell am start -a android.intent.action.VIEW \
+                   -c android.intent.category.DEFAULT \
+                   -d file:///mnt/sdcard/"$ADDON_NAME" \
+                   -n $ANDROID_APP_ID/.App && \
+echo Pushed $ADDON_NAME to $ANDROID_APP_ID
